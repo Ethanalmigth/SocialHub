@@ -1,16 +1,25 @@
-# This is a sample Python script.
+from fastapi import FastAPI, Depends
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from core.exception import CustomException
+from core.handler import Custom_exception_handler, Validation_exception_handler, Generic_exception_handler, \
+    Integrity_error_handler
+from route.user import router as UserRouter
+app = FastAPI()
+app.include_router(UserRouter, tags=["user"])
+app.add_exception_handler(CustomException,Custom_exception_handler)
+app.add_exception_handler(RequestValidationError,Validation_exception_handler)
+app.add_exception_handler(IntegrityError,Integrity_error_handler)
+app.add_exception_handler(Exception,Generic_exception_handler)
+@app.get("/")
+def read_root():
+    return {"Hello": "World"} 
+   
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+"""
+@app.get("/db-test")
+async def test_db(db: AsyncSession = Depends(get_db)):
+    return {"status": "DB connected"}
+"""
