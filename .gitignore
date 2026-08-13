@@ -1,0 +1,16 @@
+# === Éditeurs / IDE ===
+.idea/
+
+# === Backend ===
+Backend/.venv/
+Backend/__pycache__/
+Backend/*.pyc
+Backend/.env
+
+# === Frontend ===
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env.local
+
+# === Système ===
+.DS_Store
