@@ -15,9 +15,14 @@ class UserRepository:
         user = results.scalar_one_or_none()
         return user
 
+    async def get_user_by_id(self,user_id):
+        results = await self.db.execute(select(User).where(User.id == user_id))
+        user = results.scalar_one_or_none()
+        return user
+
     async def create_user(self,user: User):
         try:
-            user =User(email = user.email,name = user.name,password = hash_password(user.password))
+            user =User(email = user.email,name = user.name,hashed_password = hash_password(user.password))
             self.db.add(user)
             return user
         except Exception as e:

@@ -8,7 +8,7 @@ from core.engine import get_db
 from schema.ReponseAPI import ReponseAPI
 from schema.user import UserCreate, Userout, Userlogin
 from service.user import UserService
-
+from utils.token import controle_access_token
 
 router = APIRouter(prefix="/user", tags=["user"])
 @router.post('/register',status_code=status.HTTP_201_CREATED,response_model=ReponseAPI[Userout])
@@ -26,7 +26,7 @@ async def refresh(token:str,db:AsyncSession=Depends(get_db)):
     result= await UserService(db).refresh(token)
     return ReponseAPI(success=True,message="user refresh successfully", data=result)
 
-@router.post('/logout',status_code=status.HTTP_204_NO_CONTENT)
+@router.post('/logout',status_code=status.HTTP_200_OK,response_model=ReponseAPI[Userout])
 async def logout(id_user:UUID,db:AsyncSession=Depends(get_db)):
     await UserService(db).logout(id_user)
     return ReponseAPI(success=True,message="user logout successfully", data=None)

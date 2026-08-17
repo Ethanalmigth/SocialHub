@@ -39,7 +39,7 @@ class UserService:
         user_exist= await self.repo.get_user_by_email(user.email)
         if not user_exist:
             raise CustomException(status_code=status.HTTP_404_NOT_FOUND,message="User does not exist")
-        if not verify_password(user.password,user_exist.password):
+        if not verify_password(user.password,user_exist.hashed_password):
             raise CustomException(status_code=status.HTTP_401_UNAUTHORIZED,message="Incorrect Password")
         token_data={"id":str(user_exist.id),"email":user_exist.email,"name":user_exist.name}
         token = create_token(token_data)
@@ -76,6 +76,9 @@ class UserService:
 
 
     async def logout(self,id_user:UUID):
+        user= await self.repo.get_user_by_id(id_user)
+        if not user:
+            raise CustomException(status_code=status.HTTP_404_NOT_FOUND,message="User does not exist")
         await self.repoToken.delete_refresh_token_by_user_id(id_user)
         return None
 
