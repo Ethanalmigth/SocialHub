@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRES: int
     REFRESH_TOKEN_EXPIRES: int
 
+
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
+
     class Config:
         case_sensitive = True
         env_file = '.env'

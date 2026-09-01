@@ -10,7 +10,7 @@ class PublicationRepository():
         self.db = db
 
     async def create_publication(self,publication: PublicationCreate):
-        new_publication= Publication(post_id=publication.post_id,reseaux_id=publication.reseaux_id,schedule_at=publication.schedule)
+        new_publication= Publication(post_id=publication.post_id,reseaux_id=publication.reseaux_id,schedule_at=publication.schedule_at)
         self.db.add(new_publication)
         return new_publication
 

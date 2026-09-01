@@ -1,0 +1,59 @@
+# Environnements virtuels
+.venv/
+venv/
+env/
+ENV/
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Tests / couverture
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Git
+.git/
+.gitignore
+
+# Environnement / secrets
+.env
+.env.*
+*.env
+.txt
+
+
+# Docker
+docker-compose.yml
+docker-compose.yaml
+Dockerfile
+.dockerignore
+
+# IDE / éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic (les migrations doivent être copiées si tu les runs dans le conteneur, sinon ignore)
+# alembic/versions/__pycache__/
+
+# Fichiers de doc / divers
+README.md
+*.md

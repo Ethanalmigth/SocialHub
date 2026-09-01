@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception import CustomException
 from model.user import User
+from schema.user import UserCreate
 from utils.hash import hash_password
 
 
@@ -20,11 +21,9 @@ class UserRepository:
         user = results.scalar_one_or_none()
         return user
 
-    async def create_user(self,user: User):
-        try:
-            user =User(email = user.email,name = user.name,hashed_password = hash_password(user.password))
+    async def create_user(self,user_data: UserCreate):
+            user =User(email = user_data.email,name = user_data.name,hashed_password = hash_password(user_data.password))
             self.db.add(user)
+            await self.db.flush()
             return user
-        except Exception as e:
-            await self.db.rollback()
-            raise CustomException(status_code=400,message=str(e))
+

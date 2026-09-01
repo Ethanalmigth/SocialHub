@@ -1,0 +1,17 @@
+DATABASE_URL='postgresql+asyncpg://postgres:jaures@localhost:5432/SocialHub'
+SECRET_KEY="Jaures123"
+REFRESH_TOKEN="Jaures456"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRES=7
+REFRESH_TOKEN_EXPIRES=15
+
+DATABASE_URL="postgresql+asyncpg://socialhub:socialhub@postgres:5432/socialhub"
+SECRET_KEY="Jaures123"
+REFRESH_TOKEN="Jaures456"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRES=7
+REFRESH_TOKEN_EXPIRES=15
+
+POSTGRES_USER=socialhub
+POSTGRES_PASSWORD=socialhub
+POSTGRES_DB=socialhub

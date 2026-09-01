@@ -2,6 +2,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+
+
 class UserCreate(BaseModel):
     name: str=Field(min_length=1,max_length=50)
     email: EmailStr
@@ -21,8 +23,8 @@ class Userout(BaseModel):
     id: UUID
     name: str=Field(min_length=1,max_length=50)
     email: EmailStr
-    token: str
-    refresh_token: str
+    token: str|None=None
+    refresh_token: str|None=None
 
 class Userlogin(BaseModel):
     email: EmailStr

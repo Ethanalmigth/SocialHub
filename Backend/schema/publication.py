@@ -9,7 +9,7 @@ from enums.status_publication import StatusPublication
 class PublicationCreate(BaseModel):
     post_id: UUID
     reseaux_id: int
-    schedule: datetime
+    schedule_at: datetime
 
 class PublicationResponse(BaseModel):
     id: int

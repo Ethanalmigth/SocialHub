@@ -22,8 +22,7 @@ async def get_all_posts(db:AsyncSession=Depends(get_db),payload=Depends(controle
     result=await PostService(db).get_all_posts(payload["id"])
     return ReponseAPI(success=True, data=result, message="Post list retrieved successfully")
 
-@router.delete("/",status_code=status.HTTP_200_OK,response_model=ReponseAPI[PostResponse])
+@router.delete("/{post_id}",status_code=status.HTTP_200_OK,response_model=ReponseAPI[PostResponse])
 async def delete_post(post_id:UUID,db:AsyncSession=Depends(get_db),payload=Depends(controle_access_token)):
-    print(payload)
     result=await PostService(db).delete_post(post_id,payload["id"])
     return ReponseAPI(success=True, message="Post deleted successfully", data=result)
