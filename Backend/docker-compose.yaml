@@ -11,7 +11,6 @@ services:
         condition: service_started
     env_file: .env
 
-
   postgres:
     image: postgres:16
     container_name: postgres
@@ -27,14 +26,33 @@ services:
       interval: 7s
       timeout: 5s
 
-
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"
 
+  celery_beat:
+    build: .
+    container_name: "celery_beat"
+    command: "celery -A core.celery_app beat --loglevel=info"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file: .env
 
+  celery_worker:
+    build: .
+    container_name: "celery_worker"
+    command: "celery -A core.celery_app worker --loglevel=info -P threads"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file: .env
 
 
 

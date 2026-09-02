@@ -15,3 +15,14 @@ REFRESH_TOKEN_EXPIRES=15
 POSTGRES_USER=socialhub
 POSTGRES_PASSWORD=socialhub
 POSTGRES_DB=socialhub
+
+
+postgresql+asyncpg://socialhub:socialhub@postgres:5432/socialhub
+│                  │                │        │     │    │
+│                  │                │        │     │    └── base de données
+│                  │                │        │     └────── port
+│                  │                │        └──────────── hostname
+│                  │                └──────────────────── mot de passe
+│                  └───────────────────────────────────── utilisateur
+└──────────────────────────────────────────────────────── protocole/driver
+

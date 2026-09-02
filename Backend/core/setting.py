@@ -2,11 +2,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     DATABASE_URL: str
+    DATABASE_URL_SYNC: str
     SECRET_KEY: str
     REFRESH_TOKEN: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRES: int
     REFRESH_TOKEN_EXPIRES: int
+
 
 
     POSTGRES_USER: str

@@ -1,10 +1,12 @@
-import asyncio
+from datetime import datetime, timezone
 from uuid import UUID
 
+from psycopg.transaction import BaseTransaction
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception import CustomException
+from enums.status_publication import StatusPublication
 from model import Publication
 from repository.post import PostRepository
 from repository.publication import PublicationRepository
@@ -86,3 +88,16 @@ class PublicationService:
             scheduled_at=pub.schedule_at,
             created_at=pub.created_at
         ) for pub in publications]
+
+    async def publish_publication(self):
+        time=datetime.now(timezone.utc)
+        publications= await self.repo.get_all_publications_schedule_at(time)
+        try:
+            for publication in publications:
+                publication.published_at = time
+                publication.status = StatusPublication.PUBLISHED
+            await self.db.commit()
+        except Exception as e:
+            print(e)
+            await self.db.rollback()
+            raise CustomException(status_code=400,message="Could not publish publication")
