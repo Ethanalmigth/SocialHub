@@ -10,7 +10,7 @@ from schema.publication import PublicationCreate, PublicationResponse
 from service.publication import PublicationService
 from utils.token import controle_access_token
 
-router=APIRouter(prefix="/publication",tags=["publication"])
+router=APIRouter(prefix="/publications",tags=["publication"])
 
 @router.post("/{post_id}",response_model=ReponseAPI[PublicationResponse],status_code=status.HTTP_201_CREATED)
 async def create_publication(publication:PublicationCreate,db:AsyncSession=Depends(get_db),payload=Depends(controle_access_token)):

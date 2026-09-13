@@ -1,7 +1,8 @@
 import typing
+import uuid
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import Integer, ForeignKey, DateTime, func, Enum, UniqueConstraint
+from sqlalchemy import ForeignKey, DateTime, func, Enum, UniqueConstraint,UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.engine import Base
@@ -16,10 +17,10 @@ if typing.TYPE_CHECKING:
 class Publication(Base):
     __tablename__ = 'publication'
     __table_args__ = (UniqueConstraint("post_id", "reseaux_id", name="uq_post_reseau"),)
-    id:Mapped[int]=mapped_column(Integer,primary_key=True)
+    id:Mapped[uuid.UUID]=mapped_column(UUID,primary_key=True)
     post_id:Mapped[UUID]=mapped_column(ForeignKey("post.id"),nullable=False,index=True)
     reseaux_id:Mapped[int]=mapped_column(ForeignKey("reseaux.id"),nullable=False,index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     schedule_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     published_at:Mapped[datetime| None]=mapped_column(DateTime(timezone=True),nullable=True)
     status:Mapped[StatusPublication]=mapped_column(Enum(StatusPublication), nullable=False, default=StatusPublication.PENDING)

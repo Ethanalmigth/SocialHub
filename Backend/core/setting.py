@@ -8,12 +8,13 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRES: int
     REFRESH_TOKEN_EXPIRES: int
-
-
-
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    CLIENT_ID: str
+    CLIENT_SECRET: str
+    STATE_COOKIE_KEY: str
+    ACCESS_TOKEN_EXPIRES: int
 
 
     class Config:

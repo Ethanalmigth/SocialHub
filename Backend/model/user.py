@@ -8,6 +8,7 @@ from sqlalchemy_utils import EmailType
 from core.engine import Base
 if TYPE_CHECKING:
    from model import Post
+   from model import UserReseau
 
 
 class User(Base):
@@ -16,4 +17,7 @@ class User(Base):
     name: Mapped[str]= mapped_column(String,nullable=False)
     email: Mapped[str]= mapped_column(EmailType,nullable=False,unique=True)
     hashed_password: Mapped[str]= mapped_column(String,nullable=False)
-    posts: Mapped[list["Post"]] = relationship("Post",back_populates="user")
+    posts: Mapped[list["Post"]] = relationship("Post",back_populates="user",cascade="all, delete-orphan")
+    reseaux_accounts: Mapped[list["UserReseau"]] = relationship(
+        "UserReseau", back_populates="user", cascade="all, delete-orphan"
+    )

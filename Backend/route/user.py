@@ -3,7 +3,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 
 from core.engine import get_db
-from model import RefreshToken
 from schema.ReponseAPI import ReponseAPI
 from schema.token import RefreshTokenRequest
 from schema.user import UserCreate, Userout, Userlogin

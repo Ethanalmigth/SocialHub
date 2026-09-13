@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 class Reseaux(Base):
     __tablename__ = "reseaux"
     id:Mapped[int] = mapped_column(Integer,primary_key=True)
-    name:Mapped[str] = mapped_column(String,nullable=False)
+    name:Mapped[str] = mapped_column(String,nullable=False,unique=True)
     max_characters:Mapped[int] = mapped_column(Integer,nullable=False)
-    api_base_url:Mapped[str] = mapped_column(String,nullable=False)
+    api_base_url:Mapped[str] = mapped_column(String,nullable=False,unique=True)
     publications:Mapped[list["Publication"]] = relationship("Publication",back_populates="reseaux")
