@@ -19,6 +19,10 @@ from schema.publication import PublicationCreate, PublicationResponse
 from repository.user_reseau import UserReseauRepository
 from service.linkedin_publisher import LinkedInPublisher
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class PublicationService:
     def __init__(self, db: AsyncSession):
@@ -27,9 +31,34 @@ class PublicationService:
         self.repo_post = PostRepository(db)
         self.repo_reseaux = ReseauxRepository(db)
         self.repo_user = UserRepository(db)
-        self.repo_user_reseau = UserReseauRepository(db)  # ✅ ajouté
+        self.repo_user_reseau = UserReseauRepository(db)
 
-    # ... create() et get_publications_by_post() inchangés (avec le fix except déjà appliqué)
+    async def create(self, publication: PublicationCreate, user_id: UUID):
+        post = await self.repo_post.get_post_by_id(publication.post_id)
+        if not post:
+            raise CustomException(status_code=404, message="Post introuvable")
+
+        if str(post.user_id) != str(user_id):
+            raise CustomException(status_code=403, message="Accès non autorisé à ce post")
+
+        new_publication = await self.repo.create_publication(publication)
+        await self.db.commit()
+        await self.db.refresh(new_publication)
+        return new_publication
+
+    async def get_publications_by_post(self, user_id: UUID, post_id: UUID):
+        post = await self.repo_post.get_post_by_id(post_id)
+        if not post:
+            raise CustomException(status_code=404, message="Post introuvable")
+
+        if str(post.user_id) != str(user_id):
+            raise CustomException(status_code=403, message="Accès non autorisé à ce post")
+
+        publications = await self.repo.get_all_publications_by_post(post_id)
+        return publications
+
+
+
 
     async def publish_publication(self):
         now = datetime.now(timezone.utc)
@@ -53,7 +82,7 @@ class PublicationService:
             if len(pub.post.content) > pub.reseaux.max_characters:
                 raise CustomException(status_code=400, message="Contenu trop long pour ce réseau")
 
-            publisher = LinkedInPublisher(user_reseau)
+            publisher = LinkedInPublisher(user_reseau, self.db)
             await publisher.publish(content=pub.post.content)
 
             pub.published_at = now
@@ -61,7 +90,7 @@ class PublicationService:
             await self.db.commit()
 
         except Exception as e:
-            print(e)  # remplacez par un vrai logger en prod
+            logger.exception("Échec de publication pour pub_id=%s: %s", pub.id, e)
             await self.db.rollback()
             pub.status = StatusPublication.FAILED
             try:

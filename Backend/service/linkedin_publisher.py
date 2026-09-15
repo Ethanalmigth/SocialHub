@@ -8,7 +8,7 @@ import httpx
 from fastapi import Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import RedirectResponse, Response, JSONResponse
 
 from core.engine import get_db
 from core.exception import CustomException
@@ -32,7 +32,7 @@ class LinkedInPublisher:
     UGC_POSTS_URL = "https://api.linkedin.com/v2/ugcPosts"
     AUTHORIZATION_URL = "https://www.linkedin.com/oauth/v2/authorization"
     TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
-    USERINFO_URL = "https://www.linkedin.com/v2/userinfo"
+    USERINFO_URL = "https://api.linkedin.com/v2/userinfo"  #
 
     def __init__(self, user_reseau: UserReseau, db: AsyncSession):
         self.user_reseau = user_reseau
@@ -44,25 +44,26 @@ class LinkedInPublisher:
 
     async def auth(self, payload=Depends(controle_access_token)):
         state = secrets.token_urlsafe(32)
-        user_id = str(payload.get("sub"))
+        user_id = str(payload.get("id"))
 
         data = {
             "response_type": "code",
-            "redirect_uri": settings.redirect_url,
-            "client_id": settings.client_id,
+            "redirect_uri": settings.REDIRECT_URL,
+            "client_id": settings.CLIENT_ID,
             "state": state,
-            "scope": "w_member_social",
+            "scope": "openid profile w_member_social",
         }
         url = f"{self.AUTHORIZATION_URL}?{urllib.parse.urlencode(data)}"
 
-        reponse = RedirectResponse(url=url)
+        # JSON, pas RedirectResponse : le frontend fait window.location.href lui-même
+        reponse = JSONResponse(content={"authorization_url": url})
         reponse.set_cookie(
             key=STATE_COOKIE_KEY,
             value=state,
             max_age=300,
             httponly=True,
             samesite="lax",
-            secure=True,
+            secure=False,
         )
         reponse.set_cookie(
             key=USER_COOKIE_KEY,
@@ -70,38 +71,49 @@ class LinkedInPublisher:
             max_age=300,
             httponly=True,
             samesite="lax",
-            secure=True,
+            secure=False,
         )
         return reponse
 
     async def callback(
-        self,
-        request: Request,
-        response: Response,
-        code: str = Query(...),
-        state: str = Query(...),
-        db=Depends(get_db),
+            self,
+            request: Request,
+            code: str = Query(...),
+            state: str = Query(...),
+            db=Depends(get_db),
     ):
         cookie_state = request.cookies.get(STATE_COOKIE_KEY)
         cookie_user_id = request.cookies.get(USER_COOKIE_KEY)
 
+        logger.error("DEBUG callback: cookie_state=%r, param_state=%r, cookie_user_id=%r", cookie_state, state,
+                     cookie_user_id)
+
         if not cookie_state or not secrets.compare_digest(state, cookie_state):
-            raise CustomException(status_code=401, message="State invalide (CSRF suspecté)")
+            logger.error("DEBUG callback: ECHEC sur state mismatch")
+            return self._redirect_with_error("linkedin")
         if not cookie_user_id:
-            raise CustomException(status_code=401, message="Session utilisateur introuvable")
+            logger.error("DEBUG callback: ECHEC cookie_user_id manquant")
+            return self._redirect_with_error("linkedin")
 
-        data_auth = await self._exchange_code_for_token(code)
-        access_token = data_auth["access_token"]
-        user_data = await self._fetch_user_info(access_token)
+        try:
+            data_auth = await self._exchange_code_for_token(code)
+            access_token = data_auth["access_token"]
+            user_data = await self._fetch_user_info(access_token)
+        except CustomException as exc:
+            logger.error("DEBUG callback: ECHEC exchange/userinfo -> %s", exc)
+            return self._redirect_with_error("linkedin")
+
         author_urn = f"urn:li:person:{user_data['sub']}"
-
         expires_in = data_auth.get("expires_in", 3600)
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
         reseaux_repo = ReseauxRepository(db)
         reseau_linkedin = await reseaux_repo.get_by_name("linkedin")
         if not reseau_linkedin:
-            raise CustomException(status_code=500, message="Réseau 'linkedin' non configuré en base")
+            logger.error("DEBUG callback: ECHEC reseau_linkedin introuvable en base")
+            return self._redirect_with_error("linkedin")
+
+        logger.error("DEBUG callback: succès jusqu'ici, upsert en cours...")
 
         repo = UserReseauRepository(db)
         await repo.upsert(
@@ -114,23 +126,35 @@ class LinkedInPublisher:
             expires_at=expires_at,
         )
 
+        logger.error("DEBUG callback: upsert OK, redirection succès")
+
+        redirect = RedirectResponse(url=f"http://localhost:5173/auth?connected=linkedin")
+        redirect.delete_cookie(key=STATE_COOKIE_KEY)
+        redirect.delete_cookie(key=USER_COOKIE_KEY)
+        return redirect
+
+    @staticmethod
+    def _redirect_with_error(platform: str) -> RedirectResponse:
+        response = RedirectResponse(url=f"http://localhost:5173/auth?error={platform}")
         response.delete_cookie(key=STATE_COOKIE_KEY)
         response.delete_cookie(key=USER_COOKIE_KEY)
-
-        return ReponseAPI(
-            success=True,
-            message="Authorisation linkedin confirmer",
-            data={"author_urn": author_urn, "user": user_data},
-        )
+        return response
 
     async def _exchange_code_for_token(self, code: str) -> dict:
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "client_id": settings.client_id,
-            "client_secret": settings.client_secret,
-            "redirect_uri": settings.redirect_url,
+            "client_id": settings.CLIENT_ID,
+            "client_secret": settings.CLIENT_SECRET,
+            "redirect_uri": settings.REDIRECT_URL,
         }
+        logger.error(
+            "DEBUG exchange: client_id=%r, secret_len=%d, secret_start=%r, redirect_uri=%r",
+            data["client_id"],
+            len(data["client_secret"]) if data["client_secret"] else 0,
+            data["client_secret"][:4] if data["client_secret"] else None,
+            data["redirect_uri"],
+        )
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         try:
@@ -182,8 +206,8 @@ class LinkedInPublisher:
         data = {
             "grant_type": "refresh_token",
             "refresh_token": self.user_reseau.refresh_token,
-            "client_id": settings.client_id,
-            "client_secret": settings.client_secret,
+            "client_id": settings.CLIENT_ID,
+            "client_secret": settings.CLIENT_SECRET,
         }
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 

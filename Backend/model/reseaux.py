@@ -8,6 +8,7 @@ from core.engine import Base
 if typing.TYPE_CHECKING:
     from .post import Post
     from .publication import Publication
+    from .user_reseau import UserReseau
 
 class Reseaux(Base):
     __tablename__ = "reseaux"
@@ -16,3 +17,4 @@ class Reseaux(Base):
     max_characters:Mapped[int] = mapped_column(Integer,nullable=False)
     api_base_url:Mapped[str] = mapped_column(String,nullable=False,unique=True)
     publications:Mapped[list["Publication"]] = relationship("Publication",back_populates="reseaux")
+    reseaux_accounts = relationship("UserReseau", back_populates="reseau")

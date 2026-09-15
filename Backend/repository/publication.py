@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from enums.status_publication import StatusPublication
 from model import Publication
@@ -20,7 +23,14 @@ class PublicationRepository():
         publications=await self.db.execute(select(Publication).where(Publication.post_id == post_id))
         return publications.scalars().all()
 
-    async def get_all_publications_schedule_at(self,schedule_at):
-        publications= await self.db.execute(select(Publication).where(Publication.schedule_at <= schedule_at,Publication.status == StatusPublication.PENDING))
-        return publications.scalars().all()
+    async def get_all_publications_schedule_at(self, now: datetime):
+        result = await self.db.execute(
+            select(Publication)
+            .options(
+                selectinload(Publication.post),
+                selectinload(Publication.reseaux),
+            )
+            .where(Publication.schedule_at <= now, Publication.status == StatusPublication.PENDING)
+        )
+        return result.scalars().all()
 

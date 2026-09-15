@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from model.reseaux import Reseaux
 from model.user_reseau import UserReseau
 
 
@@ -34,6 +35,15 @@ class UserReseauRepository:
         await self.db.commit()
         await self.db.refresh(entry)
         return entry
+
+    async def get_connected_reseaux_names(self, user_id: uuid.UUID) -> list[str]:
+        """Retourne les noms des réseaux auxquels l'utilisateur est connecté."""
+        result = await self.db.execute(
+            select(Reseaux.name)
+            .join(UserReseau, UserReseau.reseaux_id == Reseaux.id)
+            .where(UserReseau.user_id == user_id)
+        )
+        return [row[0] for row in result.all()]
 
     async def get_by_user_and_reseau(
         self, user_id: uuid.UUID, reseaux_id: int

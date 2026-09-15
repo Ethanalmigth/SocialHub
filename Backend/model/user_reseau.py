@@ -37,5 +37,5 @@ class UserReseau(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="reseaux_accounts")
-    reseaux: Mapped["Reseaux"] = relationship("Reseaux", back_populates="user_accounts")
+    user = relationship("User", back_populates="reseaux_accounts")
+    reseau = relationship("Reseaux", back_populates="reseaux_accounts")

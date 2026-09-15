@@ -12,10 +12,10 @@ class PublicationCreate(BaseModel):
     schedule_at: datetime
 
 class PublicationResponse(BaseModel):
-    id: int
+    id: UUID
     reseaux_id: int
     post_id: UUID
     created_at: datetime
     published_at: datetime | None= None
-    scheduled_at: datetime
+    schedule_at: datetime
     status: StatusPublication

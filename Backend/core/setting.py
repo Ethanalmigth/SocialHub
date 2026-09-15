@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     CLIENT_SECRET: str
     STATE_COOKIE_KEY: str
     ACCESS_TOKEN_EXPIRES: int
+    REDIRECT_URL: str
+
 
 
     class Config:

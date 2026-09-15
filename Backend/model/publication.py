@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 class Publication(Base):
     __tablename__ = 'publication'
     __table_args__ = (UniqueConstraint("post_id", "reseaux_id", name="uq_post_reseau"),)
-    id:Mapped[uuid.UUID]=mapped_column(UUID,primary_key=True)
+    id:Mapped[uuid.UUID]=mapped_column(UUID,primary_key=True,default=uuid.uuid4)
     post_id:Mapped[UUID]=mapped_column(ForeignKey("post.id"),nullable=False,index=True)
     reseaux_id:Mapped[int]=mapped_column(ForeignKey("reseaux.id"),nullable=False,index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
